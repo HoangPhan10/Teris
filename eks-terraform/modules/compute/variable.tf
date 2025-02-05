@@ -20,10 +20,10 @@ variable "image_id" {
   nullable = false
 }
 
-variable "key_name" {
-  type     = string
-  nullable = false
-}
+# variable "key_name" {
+#   type     = string
+#   nullable = false
+# }
 
 variable "subnet_id" {
   type     = string

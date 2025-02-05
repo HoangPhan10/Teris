@@ -2,10 +2,10 @@ provider "aws" {
   region = var.region
 }
 
-resource "aws_key_pair" "keypair" {
-  key_name   = "keypair-eks"
-  public_key = file("./keypair/keypair.pub")
-}
+# resource "aws_key_pair" "keypair" {
+#   key_name   = "keypair-eks"
+#   public_key = file("./keypair/keypair.pub")
+# }
 
 module "networking" {
   source = "./modules/networking"
@@ -28,7 +28,7 @@ module "compute" {
   subnet_ids           = module.networking.private_subnet_ips
   node_role_arn        = module.iam.eks_node_role_arn
   vpc_sg_public        = [module.security.sg_k8s_workshop_01]
-  key_name             = aws_key_pair.keypair.id
+  # key_name             = aws_key_pair.keypair.id
   instance_type        = var.instance_type
   image_id             = var.amis[var.region]
   subnet_id            = module.networking.public_subnet_ips[0]

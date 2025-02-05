@@ -27,3 +27,18 @@ resource "aws_security_group" "sg-jenkins" {
     Name = "Jenkins-sg"
   }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

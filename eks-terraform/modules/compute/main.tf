@@ -1,5 +1,5 @@
 resource "aws_eks_cluster" "eks-cluster-workshop-01" {
-  name     = "eks-teris"
+  name     = "eks-tetris"
   role_arn = var.role_arn
   version  = "1.31"
 

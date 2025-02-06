@@ -1,6 +1,6 @@
 variable "vpc_name" {
   type    = string
-  default = "VPC EKS Workshop"
+  default = "VPC EKS Tetris"
 }
 
 variable "vpc_cidr" {

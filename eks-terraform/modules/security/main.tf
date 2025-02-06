@@ -1,5 +1,5 @@
 resource "aws_security_group" "sg_k8s_workshop_01" {
-  name        = "sg_k8s_teris"
+  name        = "sg_k8s_tetris"
   description = "Allow all traffic"
   vpc_id      = var.vpc_id
 

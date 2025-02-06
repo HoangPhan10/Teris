@@ -3,7 +3,7 @@ provider "aws" {
 }
 
 resource "aws_key_pair" "keypair" {
-  key_name   = "keypair-teris"
+  key_name   = "keypair-tetris"
   public_key = file("./keypair/keypair.pub")
 }
 

@@ -1,5 +1,5 @@
 resource "aws_iam_role" "eks_cluster_role" {
-  name = "EKSClusterRole_workshop01"
+  name = "EKSClusterRole_tetris"
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -21,7 +21,7 @@ resource "aws_iam_role_policy_attachment" "eks_cluster_policy" {
 }
 
 resource "aws_iam_role" "eks_node_role" {
-  name = "EKSNodeRole_workshop01"
+  name = "EKSNodeRole_tetris"
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [

@@ -28,7 +28,7 @@ resource "aws_iam_instance_profile" "example_profile" {
 
 resource "aws_instance" "web" {
   ami                    = "ami-04b4f1a9cf54c11d0"
-  instance_type          = "t2.medium"
+  instance_type          = "t2.xlarge"
   key_name               = var.key_name
   vpc_security_group_ids = [var.id_sg_jenkins]
   user_data              = templatefile("modules/compute/script/install_jenkins.sh", {})
@@ -39,6 +39,6 @@ resource "aws_instance" "web" {
   }
 
   root_block_device {
-    volume_size = 30
+    volume_size = 85
   }
 }

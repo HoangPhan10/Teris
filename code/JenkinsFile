@@ -1,72 +1,110 @@
 pipeline {
     agent any
     tools {
-        jdk 'jdk17'
-        nodejs 'node16'
+        jdk "jdk17"
+        nodejs "node16"
     }
     environment {
-        SCANNER_HOME = tool 'sonar-scanner'
+        SCANNER_HOME = tool "sonar-scanner"
+        GIT_REPO_NAME = "Tetris-argocd"
+        GIT_USER_NAME = "HoangPhan10"
     }
     stages {
-        stage('clean workspace') {
+        stage("Clean workspace") {
       steps {
         cleanWs()
       }
         }
-        stage('Checkout from Git') {
+        stage("Initialize") {
       steps {
-        git branch: 'master', url: 'https://github.com/HoangPhan10/Tetris.git'
+        script {
+          env.VERSION_ID = "v1.${env.BUILD_NUMBER}"
+          echo "Version ID: ${env.VERSION_ID}"
+        }
       }
         }
-        stage('Sonarqube Analysis') {
+        stage("Checkout from Git") {
       steps {
-        dir('code') {
-          withSonarQubeEnv('sonar-server') {
+        git branch: "master", url: "https://github.com/HoangPhan10/Tetris.git"
+      }
+        }
+        stage("Sonarqube Analysis") {
+      steps {
+        dir("code") {
+          withSonarQubeEnv("sonar-server") {
             sh ''' $SCANNER_HOME/bin/sonar-scanner -Dsonar.projectName=Tetris \
                     -Dsonar.projectKey=Tetris '''
         }}
         }
       }
-        stage('quality gate') {
+        stage("Quality gate") {
       steps {
-        dir('code') {
+        dir("code") {
           script {
-            waitForQualityGate abortPipeline: false, credentialsId: 'Sonar-token'
+            waitForQualityGate abortPipeline: false, credentialsId: "Sonar-token"
         }}
         }
       }
-        stage('Install Dependencies') {
+        stage("Install Dependencies") {
       steps {
-        dir('code') {
-        sh 'npm install'}
+        dir("code") {
+        sh "npm install"}
       }
         }
-        stage('OWASP FS SCAN') {
+        stage("OWASP FS SCAN") {
         steps {
-        dir('code') {
-          dependencyCheck additionalArguments: '--scan ./ --disableYarnAudit --disableNodeAudit', odcInstallation: 'DP-Check'
-          dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
+        dir("code") {
+          dependencyCheck additionalArguments: "--scan ./ --disableYarnAudit --disableNodeAudit", odcInstallation: "DP-Check"
+          dependencyCheckPublisher pattern: "**/dependency-check-report.xml"
       }}
         }
-        stage('TRIVY FS SCAN') {
+        stage("TRIVY FS SCAN") {
       steps {
-        sh 'trivy fs . > trivyfs.txt'
+        sh "trivy fs . > trivyfs.txt"
       }
         }
-        stage('Docker Build & Push') {
+        stage("Build Docker Image") {
       steps {
-        script {
-          withDockerRegistry(credentialsId: 'Docker', toolName: 'docker') {
-            sh 'docker build -t tetris .'
-            sh 'docker tag tetris phanhoang102/tetris:latest '
-            sh 'docker push phanhoang102/tetrisv1:latest '
+        dir("code") {
+          script {
+            sh "docker build -t tetris:${env.VERSION_ID} ."
           }
         }
       }
         }
-        stage('TRIVY') {
+        stage("Push Docker Image") {
       steps {
-        sh 'trivy image sevenajay/tetrisv1:latest > trivyimage.txt'
+          script {
+            withDockerRegistry(credentialsId: "Docker") {
+              sh "docker tag tetris:${env.VERSION_ID} phanhoang102/tetris:${env.VERSION_ID}"
+              sh "docker push phanhoang102/tetris:${env.VERSION_ID}"
+              sh "docker rmi tetris:${env.VERSION_ID} phanhoang102/tetris:${env.VERSION_ID}"
+            }
+          }
+      }
+        }
+        stage("TRIVY") {
+      steps {
+        sh "trivy image phanhoang102/tetris:${env.VERSION_ID} > trivyimage.txt"
+      }
+        }
+
+        stage("Checkout Code") {
+      steps {
+        git branch: "master", url: "https://github.com/HoangPhan10/Tetris-argocd.git"
+      }
+        }
+        stage("Update Deployment File") {
+      steps {
+        script {
+          withCredentials([string(credentialsId: "Github", variable: "GITHUB_TOKEN")]) {
+            NEW_IMAGE_NAME = "phanhoang102/tetris:${env.VERSION_ID}"
+            sh "sed -i 's|image: .*|image: $NEW_IMAGE_NAME|' deployment.yaml"
+            sh 'git add deployment.yaml'
+            sh "git commit -m 'Update deployment image to $NEW_IMAGE_NAME'"
+            sh "git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:master"
+          }
+        }
       }
         }
         }

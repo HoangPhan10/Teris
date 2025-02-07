@@ -51,6 +51,6 @@ resource "aws_iam_role_policy_attachment" "eks_cni_policy" {
 }
 
 resource "aws_iam_instance_profile" "ec2_instance_profile" {
-  name = "EC2AdminAccessInstanceProfile"
+  name = "EC2AdminAccessInstanceProfileTetris"
   role = aws_iam_role.eks_node_role.name
 }

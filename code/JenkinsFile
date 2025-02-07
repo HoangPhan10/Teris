@@ -88,24 +88,43 @@ pipeline {
         sh "trivy image phanhoang102/tetris:${env.VERSION_ID} > trivyimage.txt"
       }
         }
-
-        stage("Checkout Code") {
-      steps {
-        git branch: "master", url: "https://github.com/HoangPhan10/Tetris-argocd.git"
-      }
+    stage('Trigger manifest') {
+    steps {
+        build job: 'Manifest',
+              wait: true,
+              parameters: [
+                  string(name: 'image', value: "phanhoang102/tetris:${env.VERSION_ID}")
+              ]
+    }
+}
+      //   stage("Checkout Code") {
+      // steps {
+      //   git branch: "master", url: "https://github.com/HoangPhan10/Tetris-argocd.git"
+      // }
+      //   }
+      //   stage("Update Deployment File") {
+      // steps {
+      //   script {
+      //     withCredentials([string(credentialsId: "Github", variable: "GITHUB_TOKEN")]) {
+      //       NEW_IMAGE_NAME = "phanhoang102/tetris:${env.VERSION_ID}"
+      //       sh "sed -i 's|image: .*|image: $NEW_IMAGE_NAME|' deployment.yaml"
+      //       sh 'git add deployment.yaml'
+      //       sh "git commit -m 'Update deployment image to $NEW_IMAGE_NAME'"
+      //       sh "git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:master"
+      //     }
+      //   }
+      // }
+      //   }
+  }
+  post {
+     always {
+        emailext attachLog: true,
+            subject: "'${currentBuild.result}'",
+            body: "Project: ${env.JOB_NAME}<br/>" +
+                "Build Number: ${env.BUILD_NUMBER}<br/>" +
+                "URL: ${env.BUILD_URL}<br/>",
+            to: 'phanhoang1022002@gmail.com',
+            attachmentsPattern: 'trivyfs.txt,trivyimage.txt'
         }
-        stage("Update Deployment File") {
-      steps {
-        script {
-          withCredentials([string(credentialsId: "Github", variable: "GITHUB_TOKEN")]) {
-            NEW_IMAGE_NAME = "phanhoang102/tetris:${env.VERSION_ID}"
-            sh "sed -i 's|image: .*|image: $NEW_IMAGE_NAME|' deployment.yaml"
-            sh 'git add deployment.yaml'
-            sh "git commit -m 'Update deployment image to $NEW_IMAGE_NAME'"
-            sh "git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:master"
-          }
-        }
-      }
-        }
-        }
-        }
+    }
+}
